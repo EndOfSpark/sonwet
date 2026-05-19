@@ -1,0 +1,17 @@
+services:
+  sonwet:
+    image: sonwet:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    environment:
+      LATITUDE: "48.269012"
+      LONGITUDE: "14.327416"
+      SQLITE_PATH: "/data/weather_data.db"
+      JOB_INTERVAL_MINUTES: "10"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /data

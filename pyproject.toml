@@ -8,3 +8,5 @@ dependencies = [
     "apscheduler>=3.11.2",
     "requests>=2.34.2",
 ]
+[project.scripts]
+sonwet = "sonwet:main"

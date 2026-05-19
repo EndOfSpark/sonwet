@@ -1,3 +1,11 @@
+GEOSPHERE_ATTRIBUTION = {
+    "source": "GeoSphere Austria",
+    "source_url": "https://data.hub.geosphere.at",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "Datenquelle: GeoSphere Austria - https://data.hub.geosphere.at",
+}
+
 ICON_ID_TO_DESCRIPTION = {
     1: "cloudless",
     2: "clear",

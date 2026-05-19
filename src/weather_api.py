@@ -5,17 +5,62 @@ from typing import Any, Optional
 
 import requests
 
-from src.mappings import map_icon_id
+try:
+    from .globals import map_icon_id
+except ImportError:
+    from globals import map_icon_id
 
 
 GEOSPHERE_BASE = "https://dataset.api.hub.geosphere.at/v1"
 
-INCA_RESOURCE = "inca-v1-1h-1km"
+NOWCAST_RESOURCE = "nowcast-v1-15min-1km"
 NWP_RESOURCE = "nwp-v1-1h-2500m"
 
-INCA_PARAMS = ["RR", "RH2M", "T2M", "TD2M"]
+NOWCAST_PARAMS = {
+    "RR": "rr",
+    "RH2M": "rh2m",
+    "T2M": "t2m",
+}
 FORECAST_PARAMS = ["sy"]
 
+def classify_rain(value_kg_m2: float, interval_minutes: int = 60) -> str:
+    """
+    Classify liquid precipitation intensity.
+
+    value_kg_m2:
+        Accumulated precipitation over the interval.
+        For liquid water: kg/m² == mm.
+
+    interval_minutes:
+        Measurement/forecast accumulation interval.
+        Use 15 for GeoSphere nowcast-v1-15min-1km.
+        Use 10 for 10-minute station data.
+    """
+
+    if value_kg_m2 is None:
+        return "unknown"
+
+    if value_kg_m2 < 0:
+        return "unknown"
+
+    rate = value_kg_m2 * 60.0 / interval_minutes
+
+    if rate < 0.1:
+        return "none"
+
+    if rate < 0.5:
+        return "trace"
+
+    if rate < 2.5:
+        return "light"
+
+    if rate < 10.0:
+        return "moderate"
+
+    if rate < 50.0:
+        return "heavy"
+
+    return "violent"
 
 def get_geosphere_weather_mapping(
     lat: float,
@@ -29,31 +74,33 @@ def get_geosphere_weather_mapping(
     """
     Return a simple key/value mapping for one coordinate.
 
-    Historical INCA fields:
-      RR    = 1-hour precipitation sum
-      RH2M  = 2m relative humidity
-      T2M   = 2m temperature
-      TD2M  = 2m dew point temperature
+        Nowcast fields:
+            RR    = 15-minute precipitation sum in kg m-2 (mm)
+            RH2M  = 2m relative humidity in %
+            T2M   = 2m temperature in degrees Celsius
 
         Forecast field:
             sy    = mapped weather-symbol forecast description
 
     Drift fields:
-      history_drift_minutes:
-        selected INCA timestamp minus now.
-        Usually negative, because historical data lags behind now.
+            nowcast_drift_minutes:
+                selected nowcast timestamp minus now.
+                Usually near zero because this chooses the nearest nowcast time.
 
-      forecast_drift_minutes:
-        selected forecast valid timestamp minus now.
+            nwp_drift_minutes:
+                selected NWP valid timestamp minus now.
         Usually positive or zero, because this chooses the next forecast time.
 
         If flat=True, return only these top-level key/value pairs:
-            history_drift_minutes
-            forecast_drift_minutes
+            nowcast_timestamp
+            nwp_timestamp
+            nowcast_drift_minutes
+            nwp_drift_minutes
             RR
+            rain_classification
             RH2M
             T2M
-            TD2M
+            sy
     """
 
     if not (-90 <= lat <= 90):
@@ -63,38 +110,26 @@ def get_geosphere_weather_mapping(
 
     now = datetime.now(timezone.utc)
 
-    # Historical INCA: use metadata to avoid requesting beyond available data.
-    inca_metadata = _get_json(
-        f"/timeseries/historical/{INCA_RESOURCE}/metadata",
-        params={},
-        timeout=timeout,
-    )
-
-    latest_inca_time = _parse_dt(inca_metadata["end_time"])
-    history_target = min(now, latest_inca_time)
-
-    history_start = history_target - timedelta(hours=history_hours)
-    history_end = history_target
-
-    history_data, history_url = _get_json_with_url(
-        f"/timeseries/historical/{INCA_RESOURCE}",
+    # GeoSphere nowcast is exposed as a forecast endpoint and returns a rolling
+    # short-range horizon for the selected coordinate.
+    nowcast_data, nowcast_url = _get_json_with_url(
+        f"/timeseries/forecast/{NOWCAST_RESOURCE}",
         params={
             "lat_lon": f"{lat},{lon}",
-            "parameters": ",".join(INCA_PARAMS),
-            "start": _api_dt(history_start),
-            "end": _api_dt(history_end),
+            "parameters": ",".join(NOWCAST_PARAMS.values()),
+            "forecast_offset": "0",
             "output_format": "geojson",
         },
         timeout=timeout,
     )
 
-    history_idx, history_timestamp = _closest_timestamp(
-        history_data,
+    nowcast_idx, nowcast_timestamp = _closest_timestamp(
+        nowcast_data,
         target=now,
         prefer_future=False,
     )
 
-    history_point = _nearest_point(history_data)
+    nowcast_point = _nearest_point(nowcast_data)
 
     # Forecast: choose the next valid sy timestamp closest to now.
     forecast_start = now
@@ -124,6 +159,19 @@ def get_geosphere_weather_mapping(
     reference_time = forecast_data.get("reference_time")
     reference_time_dt = _parse_dt(reference_time) if reference_time else None
 
+    history_fields = {
+        output_param: {
+            **_param_value(nowcast_data, query_param, nowcast_idx),
+            "timestamp_utc": nowcast_timestamp.isoformat(),
+            "nowcast_drift_minutes": _minutes(nowcast_timestamp - now),
+        }
+        for output_param, query_param in NOWCAST_PARAMS.items()
+    }
+    history_fields["RR"]["rain_classification"] = classify_rain(
+        history_fields["RR"]["value"],
+        interval_minutes=15,
+    )
+
     forecast_symbol = _param_value(forecast_data, "sy", forecast_idx)
     forecast_symbol["value"] = _map_forecast_symbol_value(forecast_symbol["value"])
 
@@ -135,19 +183,12 @@ def get_geosphere_weather_mapping(
         },
 
         "history": {
-            "source": INCA_RESOURCE,
-            "timestamp_utc": history_timestamp.isoformat(),
-            "history_drift_minutes": _minutes(history_timestamp - now),
-            "nearest_grid_point": history_point,
-            "url": history_url,
-            "fields": {
-                param: {
-                    **_param_value(history_data, param, history_idx),
-                    "timestamp_utc": history_timestamp.isoformat(),
-                    "history_drift_minutes": _minutes(history_timestamp - now),
-                }
-                for param in INCA_PARAMS
-            },
+            "source": NOWCAST_RESOURCE,
+            "timestamp_utc": nowcast_timestamp.isoformat(),
+            "nowcast_drift_minutes": _minutes(nowcast_timestamp - now),
+            "nearest_grid_point": nowcast_point,
+            "url": nowcast_url,
+            "fields": history_fields,
         },
 
         "forecast": {
@@ -156,7 +197,7 @@ def get_geosphere_weather_mapping(
             if reference_time_dt
             else None,
             "valid_time_utc": forecast_timestamp.isoformat(),
-            "forecast_drift_minutes": _minutes(forecast_timestamp - now),
+            "nwp_drift_minutes": _minutes(forecast_timestamp - now),
             "forecast_run_age_minutes": _minutes(now - reference_time_dt)
             if reference_time_dt
             else None,
@@ -166,7 +207,7 @@ def get_geosphere_weather_mapping(
                 "sy": {
                     **forecast_symbol,
                     "valid_time_utc": forecast_timestamp.isoformat(),
-                    "forecast_drift_minutes": _minutes(forecast_timestamp - now),
+                    "nwp_drift_minutes": _minutes(forecast_timestamp - now),
                 }
             },
         },
@@ -180,14 +221,20 @@ def get_geosphere_weather_mapping(
 
 def _flatten_weather_mapping(result: dict[str, Any]) -> dict[str, Any]:
     history_fields = result["history"]["fields"]
+    forecast_fields = result["forecast"]["fields"]
 
     flat_result = {
-        "history_drift_minutes": result["history"]["history_drift_minutes"],
-        "forecast_drift_minutes": result["forecast"]["forecast_drift_minutes"],
+        "nowcast_timestamp": result["history"]["timestamp_utc"],
+        "nwp_timestamp": result["forecast"]["valid_time_utc"],
+        "nowcast_drift_minutes": result["history"]["nowcast_drift_minutes"],
+        "nwp_drift_minutes": result["forecast"]["nwp_drift_minutes"],
+        "sy": forecast_fields["sy"]["value"],
     }
 
-    for param in INCA_PARAMS:
+    for param in NOWCAST_PARAMS:
         flat_result[param] = history_fields[param]["value"]
+
+    flat_result["rain_classification"] = history_fields["RR"]["rain_classification"]
 
     return flat_result
 
@@ -291,8 +338,8 @@ def _param_value(
     }
 
 if __name__ == "__main__":
+    import os
+    lat = float(os.environ.get("LATITUDE", "48.269012"))
+    lon = float(os.environ.get("LONGITUDE", "14.327416"))
 
-    lat = 48.269012
-    lon = 14.327416
-
-    print(get_geosphere_weather_mapping(lat, lon))
+    print(get_geosphere_weather_mapping(lat, lon, flat=True))

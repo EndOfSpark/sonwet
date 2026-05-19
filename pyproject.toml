@@ -1,7 +1,7 @@
 [project]
 name = "sonwet"
 version = "0.1.0"
-description = "An all in one tool for accumulating and querying weather and sun data in Austria over time."
+description = "A tool for accumulating and querying weather and sun data in Austria over time."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

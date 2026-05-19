@@ -1,0 +1,9 @@
+[project]
+name = "sonwet"
+version = "0.1.0"
+description = "An all in one solution for accumulating and querying weather and sun data over time."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.34.2",
+]

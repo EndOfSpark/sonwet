@@ -1,0 +1,122 @@
+/* Dense observation-portal presentation. Loaded after the base theme. */
+body {
+  background: #ecebe5;
+  color: #191919;
+  font-family: Arial, Helvetica, sans-serif;
+  background-image: none;
+}
+
+.topbar {
+  position: static;
+  height: 48px;
+  padding: 0 max(14px, calc((100vw - 1440px) / 2));
+  background: #9f1d24;
+  border: 0;
+  color: #fff;
+}
+
+.brandmark { width: 30px; height: 30px; border: 1px solid #fff8; border-radius: 0; background: transparent; color: #fff; }
+.brand b { font-size: 14px; letter-spacing: .08em; }
+.brand span, .status { color: #f4d9d9; font-size: 9px; }
+.portal-nav { display: flex; height: 100%; margin-right: auto; margin-left: 30px; }
+.portal-nav span { display: flex; align-items: center; padding: 0 18px; border-left: 1px solid #ffffff32; font-size: 10px; }
+.status i { background: #fff; box-shadow: none; }
+
+.page-shell { width: min(1440px, calc(100% - 24px)); padding: 14px 0 20px; }
+.hero { align-items: center; margin: 0 0 8px; padding: 8px 10px; background: #fff; border: 1px solid #bbb8ae; }
+.hero h1 { display: inline; font-size: 20px; letter-spacing: 0; }
+.eyebrow { display: inline-flex; margin: 0 16px 0 0; color: #9f1d24; font-size: 9px; }
+.archive-meta { font: 10px var(--font-mono); color: #555; }
+
+.range-toolbar { display: flex; align-items: stretch; gap: 8px; margin-bottom: 8px; padding: 6px; background: #d7d4cb; border: 1px solid #aaa69a; }
+.toolbar-label { padding: 5px 10px; border-right: 1px solid #aaa69a; font-weight: 700; font-size: 11px; line-height: 1.1; }
+.toolbar-label small { font: 8px var(--font-mono); color: #67645e; }
+.period-picker { align-self: center; padding: 0; background: #fff; border: 1px solid #aaa69a; border-radius: 0; }
+.period-picker a { padding: 8px 12px; border-right: 1px solid #ccc8bd; border-radius: 0; color: #333; font-size: 10px; }
+.period-picker a:last-child { border: 0; }
+.period-picker a.active { background: #243f5c; color: #fff; }
+.date-form { display: flex; align-items: center; gap: 7px; margin-left: auto; }
+.date-form label { display: flex; align-items: center; gap: 6px; color: #484641; font-size: 9px; font-weight: 700; }
+.date-form input { padding: 5px 6px; border: 1px solid #88857d; background: #fff; color: #111; font: 11px var(--font-mono); color-scheme: light; }
+.date-form button, .date-form > a { padding: 7px 12px; border: 1px solid #172d43; border-radius: 0; background: #243f5c; color: #fff; font: 700 9px var(--font-mono); text-decoration: none; cursor: pointer; }
+.date-form > a { background: #fff; color: #333; border-color: #88857d; }
+
+.now-card { grid-template-columns: 1.3fr repeat(4, 1fr); margin-bottom: 8px; border: 1px solid #aaa69a; border-radius: 0; background: #fff; box-shadow: none; }
+.now-main, .now-detail { min-height: 76px; padding: 10px 15px; border-right-color: #ccc8bd; }
+.weather-orb { width: 42px; height: 42px; border-radius: 0; background: #9f1d24; color: #fff; box-shadow: none; }
+.weather-orb svg { width: 21px; }
+.now-main p, .now-main div > span, .now-detail span { color: #64615b; }
+.now-main strong { font-size: 29px; }
+.now-main sup { color: #9f1d24; }
+.now-detail svg { color: #9f1d24; }
+.now-detail b { color: #111; }
+
+.metric-grid { gap: 8px; margin-bottom: 8px; }
+.metric, .panel { background: #fff; border: 1px solid #aaa69a; border-radius: 0; }
+.metric { padding: 11px 14px; }
+.metric > span { color: #555; }
+.metric > span svg { color: #9f1d24; }
+.metric strong { margin: 7px 0 2px; font-size: 24px; color: #111; }
+.metric p, .metric strong small { color: #68655f; }
+.metric p b { color: #222; }
+.panel { padding: 12px; }
+.wide { margin-bottom: 8px; }
+.panel-head { margin-bottom: 5px; padding-bottom: 6px; border-bottom: 2px solid #243f5c; }
+.panel-head p { margin: 0 12px 0 0; color: #9f1d24; }
+.panel-head > div:first-child { display: flex; align-items: baseline; }
+.panel-head h2 { font-size: 14px; }
+.chart-large { height: 330px; }
+.chart-instruction { color: #666; font: 9px var(--font-mono); }
+.weather-chart { display: flex; flex-direction: column; }
+.weather-plot { min-height: 0; flex: 1; cursor: crosshair; user-select: none; }
+.chart-controls { display: flex; align-items: center; justify-content: space-between; min-height: 34px; gap: 12px; }
+.series-toggles { display: flex; gap: 4px; }
+.series-toggles button, .zoom-status button { position: relative; border: 1px solid #aaa69a; border-radius: 0; padding: 5px 9px 5px 21px; background: #eeeae0; color: #777; font: 700 9px var(--font-mono); cursor: pointer; }
+.series-toggles button::before { content: ""; position: absolute; left: 8px; top: 50%; width: 7px; height: 7px; margin-top: -4px; background: #999; }
+.series-toggles button[aria-pressed="true"] { background: #fff; color: #191919; border-color: #68655f; }
+.series-toggles .temperature[aria-pressed="true"]::before { background: #a61f28; }
+.series-toggles .humidity[aria-pressed="true"]::before { background: #126878; }
+.series-toggles .rainfall[aria-pressed="true"]::before { background: #2f6597; }
+.zoom-status { display: flex; align-items: center; gap: 10px; color: #555; font: 9px var(--font-mono); }
+.zoom-status button { padding-left: 9px; background: #243f5c; color: #fff; border-color: #172d43; }
+.zoom-status button:disabled { opacity: .4; cursor: default; }
+.synchronized-chart { cursor: default; }
+.state-legend { display: flex; flex-wrap: wrap; gap: 7px 16px; min-height: 20px; padding: 6px 50px 0; border-top: 1px solid #d3d0c7; color: #4e4c47; font: 9px var(--font-mono); text-transform: capitalize; }
+.state-legend span { display: flex; align-items: center; gap: 5px; }
+.state-legend i { width: 9px; height: 9px; }
+.condition-panel { margin-bottom: 8px; }
+.condition-chart { height: 170px; }
+.condition-legend { padding-bottom: 4px; }
+.table-panel .panel-head { padding: 12px 12px 6px; }
+.sample-chip { border-radius: 0; color: #444; }
+th { padding: 8px 10px; background: #e2e0d8; border-color: #aaa69a; color: #333; }
+td { padding: 7px 10px; border-color: #ddd9cf; color: #292929; }
+tbody tr:nth-child(even) { background: #f4f3ef; }
+tbody tr:hover { background: #fff1c7; }
+.pill { border-radius: 0; }
+footer { padding-top: 12px; color: #555; }
+
+@media (max-width: 900px) {
+  .portal-nav { display: none; }
+  .range-toolbar { align-items: flex-start; flex-wrap: wrap; }
+  .date-form { width: 100%; margin: 0; flex-wrap: wrap; }
+  .archive-meta { display: none; }
+}
+
+@media (max-width: 640px) {
+  .page-shell { width: calc(100% - 12px); padding-top: 6px; }
+  .hero { padding: 8px; }
+  .hero h1 { font-size: 17px; }
+  .toolbar-label { display: none; }
+  .period-picker { width: 100%; }
+  .date-form label { flex: 1; display: grid; }
+  .date-form input { width: 100%; }
+  .now-main, .now-detail { min-height: 62px; }
+  .metric-grid { gap: 6px; }
+  .metric { padding: 9px 12px; }
+  .panel { padding: 8px; }
+  .chart-large { height: 300px; }
+  .chart-controls { align-items: flex-start; flex-direction: column; padding: 4px 0; }
+  .zoom-status { width: 100%; justify-content: space-between; }
+  .chart-instruction { display: none; }
+}

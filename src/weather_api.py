@@ -339,7 +339,7 @@ def _param_value(
 
 if __name__ == "__main__":
     import os
-    lat = float(os.environ.get("LATITUDE", "48.269012"))
-    lon = float(os.environ.get("LONGITUDE", "14.327416"))
+    lat = float(os.environ.get("LATITUDE", "48.20849"))
+    lon = float(os.environ.get("LONGITUDE", "16.37208"))
 
     print(get_geosphere_weather_mapping(lat, lon, flat=True))

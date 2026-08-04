@@ -7,10 +7,10 @@ services:
     init: true
     restart: unless-stopped
     environment:
-      LATITUDE: "48.269012"
-      LONGITUDE: "14.327416"
-      SQLITE_PATH: "/data/weather_data.db"
-      JOB_INTERVAL_MINUTES: "10"
+      LATITUDE: "48.20849" # Default if not defined
+      LONGITUDE: "16.37208" # Default if not defined
+      SQLITE_PATH: "/data/weather_data.db" # Default if not defined
+      JOB_INTERVAL_MINUTES: "10" # Default if not defined
     volumes:
       - type: bind
         source: ./data

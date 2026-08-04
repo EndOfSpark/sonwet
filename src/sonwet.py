@@ -91,8 +91,8 @@ def main():
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
 
-    lat = float(os.environ.get("LATITUDE", "48.269012"))
-    lon = float(os.environ.get("LONGITUDE", "14.327416"))
+    lat = float(os.environ.get("LATITUDE", "48.20849"))
+    lon = float(os.environ.get("LONGITUDE", "16.37208"))
     sqlite_path = os.environ.get("SQLITE_PATH", "weather_data.db")
     job_interval_minutes = int(os.environ.get("JOB_INTERVAL_MINUTES", "10"))
 
